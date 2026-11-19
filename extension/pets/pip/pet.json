@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "id": "pip",
+  "name": "Pip",
+  "author": "pop_OUT",
+  "sheet": "sprites.png",
+  "frameWidth": 256,
+  "frameHeight": 256,
+  "frames": 4,
+  "fps": 6,
+  "rows": {
+    "idle": 0,
+    "happy": 1,
+    "alert": 2,
+    "annoyed": 3,
+    "celebrate": 4
+  }
+}

@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>pop_OUT</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <main>
+    <header>
+      <div id="heroPet"></div>
+      <div>
+        <h1>pop_OUT</h1>
+        <p class="muted" data-i18n="privacy"></p>
+      </div>
+    </header>
+
+    <section>
+      <h2 data-i18n="general"></h2>
+      <label class="inline"><span data-i18n="language"></span>
+        <select id="lang"><option value="es">Español</option><option value="en">English</option></select>
+      </label>
+      <label class="inline"><span data-i18n="graceSeconds"></span>
+        <input id="grace" type="number" min="30" max="600" step="5" />
+      </label>
+      <label class="inline"><span data-i18n="idleMinutes"></span>
+        <input id="idle" type="number" min="1" max="60" />
+      </label>
+      <button id="testPop" class="ghost" data-i18n="testPop"></button>
+    </section>
+
+    <section>
+      <h2 data-i18n="presets"></h2>
+      <div id="presets"></div>
+      <div class="buttons">
+        <button id="addPreset" class="ghost" data-i18n="addPreset"></button>
+        <button id="savePresets" class="primary" data-i18n="save"></button>
+        <span id="savedMsg" class="ok" hidden data-i18n="saved"></span>
+      </div>
+    </section>
+
+    <section>
+      <h2 data-i18n="pets"></h2>
+      <div id="pets" class="pets"></div>
+
+      <h3 data-i18n="promptTitle"></h3>
+      <p class="muted" data-i18n="promptHelp"></p>
+      <label><span data-i18n="promptName"></span><input id="petName" maxlength="30" value="Mochi" /></label>
+      <label><span data-i18n="promptDesc"></span>
+        <textarea id="petDesc" rows="2" data-i18n-placeholder="promptDescPlaceholder"></textarea></label>
+      <div class="buttons"><button id="copyPrompt" class="primary" data-i18n="copyPrompt"></button>
+        <span id="copiedMsg" class="ok" hidden data-i18n="copied"></span></div>
+      <pre id="promptPreview"></pre>
+
+      <h3 data-i18n="importPet"></h3>
+      <p class="muted" data-i18n="importHelp"></p>
+      <div class="buttons">
+        <input id="petJson" type="file" accept=".json,application/json" />
+        <input id="petSheet" type="file" accept="image/png,image/webp" />
+        <button id="importBtn" class="primary" data-i18n="importBtn"></button>
+      </div>
+      <p id="importMsg" class="muted"></p>
+    </section>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>

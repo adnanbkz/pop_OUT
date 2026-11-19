@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "pop_OUT",
+  "version": "0.1.0",
+  "description": "A tiny, local-only focus timer. Your pet pops out when you slip into autopilot.",
+  "icons": { "16": "icons/icon-16.png", "32": "icons/icon-32.png", "48": "icons/icon-48.png", "128": "icons/icon-128.png" },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "pop_OUT",
+    "default_icon": { "16": "icons/icon-16.png", "32": "icons/icon-32.png" }
+  },
+  "options_ui": { "page": "options/options.html", "open_in_tab": true },
+  "permissions": ["storage", "tabs", "alarms", "idle", "scripting", "notifications"],
+  "host_permissions": ["<all_urls>"],
+  "web_accessible_resources": [{ "resources": ["pets/*"], "matches": ["<all_urls>"] }]
+}

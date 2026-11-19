@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <div id="pet"></div>
+    <div>
+      <h1>pop_OUT</h1>
+      <p id="status" class="status"></p>
+    </div>
+  </header>
+
+  <!-- No session: set one up -->
+  <form id="setup" hidden>
+    <label><span data-i18n="task"></span>
+      <input id="task" required maxlength="80" data-i18n-placeholder="taskPlaceholder" autofocus />
+    </label>
+    <label><span data-i18n="preset"></span>
+      <select id="preset"></select>
+    </label>
+    <label><span data-i18n="goal"></span>
+      <input id="goal" type="number" min="1" max="600" value="25" />
+    </label>
+    <p id="perm" class="warn" hidden data-i18n="needPermission"></p>
+    <button type="submit" class="primary" data-i18n="start"></button>
+  </form>
+
+  <!-- Session running -->
+  <section id="running" hidden>
+    <p class="task" id="runTask"></p>
+    <div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" class="bg"/><circle cx="50" cy="50" r="44" class="fg" id="arc"/></svg>
+      <div class="ringText"><strong id="time">00:00</strong><small id="left"></small></div>
+    </div>
+    <div class="buttons">
+      <button id="pauseBtn"></button>
+      <button id="stopBtn" class="ghost" data-i18n="stop"></button>
+    </div>
+  </section>
+
+  <!-- Goal reached -->
+  <section id="done" hidden>
+    <h2 data-i18n="doneTitle"></h2>
+    <p class="task" id="doneTask"></p>
+    <button id="newBtn" class="primary" data-i18n="newSession"></button>
+  </section>
+
+  <footer><a href="#" id="settings" data-i18n="settings"></a></footer>
+  <script src="popup.js"></script>
+</body>
+</html>
