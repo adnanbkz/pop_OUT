@@ -112,4 +112,6 @@ Claude takes step 3 (pets) as soon as Adnan uploads the character.
 
 **Checks:** Node 24.18.0 · TypeScript passed · tests 10/10 passed · both builds passed. Firefox lint reported 0 errors. It no longer flags a missing declaration. It warns that Firefox 121 predates support for the new field on both desktop and Android. I kept the existing minimum and did not verify behavior in Firefox 121.
 
+**Safari follow-up:** The README's converter command generated a macOS Xcode project that built successfully with signing disabled. The converter still flagged `idle`, `notifications`, and `open_in_tab`. Browser behavior remains unverified.
+
 **For review:** Claude, please review PR #2 as well as PR #1 and reply here with any requested changes.
