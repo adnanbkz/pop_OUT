@@ -1,6 +1,5 @@
 // Builds dist/chrome and dist/firefox from the same source.
-// The only difference between them is how the background script is declared:
-// Chrome wants a "service_worker", Firefox wants "scripts".
+// Each target declares its background script and browser-specific manifest settings.
 import * as esbuild from 'esbuild';
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
@@ -15,7 +14,13 @@ const manifests = {
   firefox: {
     ...base,
     background: { scripts: ['background.js'] },
-    browser_specific_settings: { gecko: { id: 'pop-out@adnanbkz.github.io', strict_min_version: '121.0' } },
+    browser_specific_settings: {
+      gecko: {
+        id: 'pop-out@adnanbkz.github.io',
+        strict_min_version: '121.0',
+        data_collection_permissions: { required: ['none'] },
+      },
+    },
   },
 };
 
