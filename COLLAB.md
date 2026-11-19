@@ -1,0 +1,85 @@
+# COLLAB.md — Claude ⇄ Codex
+
+Adnan wants **Claude** (Anthropic) and **Codex** (OpenAI) to build pop_OUT together, reviewing and testing
+each other's work. This file is how we talk. Adnan reads it too.
+
+## Protocol (read this first)
+
+1. **Before you start a session:** `git fetch origin`, merge `origin/main` (or the current shared branch, see
+   *Branches*), then read this whole file, newest entries first.
+2. **After a session:** append an entry to the **Log** at the bottom, *newest last*, using the template.
+   Commit it with your code.
+3. **Only edit your own entries.** To answer the other agent, write a new entry that quotes the ID you reply to
+   (e.g. `Re: C-003`). Never rewrite or delete the other agent's text. That keeps merges conflict-free.
+4. **Claim before you touch.** Put a line in *Who's on what* before working on files someone else might touch.
+   If a file is claimed by the other agent, don't edit it: write a review note or a request instead.
+5. **Every change gets a reviewer.** Work happens on your own branch (`claude/...` or `codex/...`), goes into
+   a pull request to the shared branch, and the *other* agent reviews it: reads the diff, runs the checks below,
+   writes findings in the PR and a short summary here. Don't merge your own PR; Adnan merges.
+6. **Checks everyone runs before asking for review** (from `extension/`):
+   `npm ci && npm run typecheck && npm test && npm run build`
+   Say in your entry what you ran and the result. If you add a test, say which.
+7. **Disagreements:** state the option you prefer and why in one entry. If the other agent still disagrees,
+   add the question to *Open questions for Adnan* and continue with something else. Adnan decides.
+8. **Ground rules from Adnan:** fully local (no servers, no analytics, no network calls), very low CPU/RAM,
+   open source (MIT), English + Spanish, explain decisions simply so Adnan can learn from them.
+
+### Entry template
+
+```
+### C-001 · Claude · 2026-11-19
+**Did:** …
+**Checks:** typecheck ✅ · tests 10/10 ✅ · build ✅
+**For review:** PR #… / commit …
+**Asks / next:** …
+```
+IDs: `C-###` for Claude, `X-###` for Codex, counting up.
+
+## Branches
+
+- Right now the only branch is `claude/project-thread-x74ai6` (it holds v0.1). Until Adnan creates `main`,
+  treat it as the shared branch: branch off it and open PRs into it.
+- Once `main` exists, everyone branches off `main` and opens PRs into `main`.
+
+## Who's on what
+
+| Area | Owner | Files | Status |
+|------|-------|-------|--------|
+| v0.1 extension core (timer, rules, overlay, popup, settings) | Claude | `extension/src/**` | done, **needs Codex review** |
+| Step 3: default pets + Adnan's 2D character | Claude | `extension/pets/**`, `extension/scripts/**` | waiting for Adnan's images |
+| Step 4: CI (GitHub Actions), Firefox `web-ext lint`, Safari wrapper, resource measurement | Codex (proposed) | `.github/**`, `extension/build.mjs`, `docs/PACKAGING.md` | proposed, not claimed yet |
+| End-to-end browser tests (Playwright, loads the built extension) | Codex (proposed) | `extension/e2e/**` | proposed, not claimed yet |
+
+Codex: if you'd rather take something else, say so in your first entry.
+
+## Open questions for Adnan
+
+- Create a `main` branch from `claude/project-thread-x74ai6` so both agents have one shared target? (Claude recommends yes.)
+
+## Map of the project (short)
+
+- `README.md`: what it is, install, roadmap.
+- `docs/HOW_IT_WORKS.md`: plain-language tour of the code. **Start here.**
+- `docs/PET_FORMAT.md`: sprite sheet spec (4 × 5 grid of 256 px cells).
+- `extension/src/background.ts`: event-driven state machine; no loops, only browser events + 1-minute alarm.
+- `extension/src/shared/brain.ts`: the local "smart" rules that pick the pet's message and mood.
+- `extension/src/shared/match.ts`: URL ↔ preset matching (unit-tested).
+
+## Log
+
+### C-001 · Claude · 2026-11-19
+**Did:** Built v0.1 of the browser extension (Manifest V3, TypeScript + esbuild, builds `dist/chrome` and
+`dist/firefox`): presets, timer that only advances on allowed sites, pet overlay in a closed Shadow DOM,
+escalating local nudges, EN/ES, pet format + AI prompt generator + importer, placeholder pet "Pip", docs.
+**Checks:** typecheck ✅ · unit tests 10/10 ✅ · build ✅ · manual Playwright run in Chromium: timer counts on
+github.com, stops on youtube.com, pet pops out after 30 s, "welcome back" on return ✅.
+**Not tested yet:** Firefox and Safari in a real browser; CPU/RAM numbers.
+**For review (Codex):** commit `1ac50b6`. Things I'd like a second pair of eyes on:
+1. `background.ts` → `evaluate()` serializes events with a promise chain, but `nudge()` writes the session
+   after its own `evaluate()`, outside that chain. Is the race worth fixing?
+2. Firefox MV3: host permission is requested from the popup's Start button (`popup.ts`). Does the prompt
+   actually appear there in Firefox 121+?
+3. Overlay sprite uses a `chrome-extension://` or `data:` URL as a CSS background. Pages with a strict
+   `img-src` CSP might block it. Can you find a site where it breaks?
+**Asks / next:** Codex, please review v0.1 and claim step 4 (CI + packaging + measurements) if you agree.
+Claude takes step 3 (pets) as soon as Adnan uploads the character.
