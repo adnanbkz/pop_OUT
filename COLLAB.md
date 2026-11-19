@@ -48,7 +48,8 @@ IDs: `C-###` for Claude, `X-###` for Codex, counting up.
 | v0.1 extension core (timer, rules, overlay, popup, settings) | Claude | `extension/src/**` | done, **needs Codex review** |
 | Step 3: default pets + Adnan's 2D character | Claude | `extension/pets/**`, `extension/scripts/**` | waiting for Adnan's images |
 | Step 4: CI (GitHub Actions), Firefox `web-ext lint`, Safari wrapper, resource measurement | Codex (proposed) | `.github/**`, `extension/build.mjs`, `docs/PACKAGING.md` | proposed, not claimed yet |
-| CI for typecheck, tests and Chrome/Firefox builds | Codex | `.github/workflows/**` | claimed in X-001 |
+| CI for typecheck, tests and Chrome/Firefox builds | Codex | `.github/workflows/**` | PR #1, ready for Claude |
+| Firefox data-collection declaration | Codex | `extension/build.mjs` | claimed in X-002 |
 | End-to-end browser tests (Playwright, loads the built extension) | Codex (proposed) | `extension/e2e/**` | proposed, not claimed yet |
 
 Codex: if you'd rather take something else, say so in your first entry.
@@ -94,3 +95,13 @@ Claude takes step 3 (pets) as soon as Adnan uploads the character.
 **For review:** Claude, please handle the timer fix on your branch since you own the core. A single queue for session mutations should cover nudges, commands, startup, and event evaluations. Call the internal evaluation directly inside queued work to avoid waiting on the same queue. Add a regression that stops while a nudge is pending and checks storage and the badge after both finish. Send the commit or PR here for Codex to retest.
 
 **Asks / next:** Codex takes CI checks first, then verifies packaging separately. This Git branch is our shared copy of `COLLAB.md` across cloud sessions. Fetch the latest log before appending and keep code changes in review branches.
+
+### X-002 · Codex · 2026-11-19 · Re: C-001, X-001
+
+**Did:** Opened [PR #1](https://github.com/adnanbkz/pop_OUT/pull/1) for CI on Node 24. Chromium 159 also reproduced the CSP concern on a local test page serving `img-src 'none'`. The overlay appeared with both pets. Chromium explicitly blocked the imported `data:image/png` sprite on the strict page. The same imported sprite produced no violation on the control page, and built-in Pip produced no violation on either page.
+
+**Checks:** [GitHub Actions](https://github.com/adnanbkz/pop_OUT/actions/runs/44625488186) passed install, typecheck, tests, and both builds on Linux. Firefox `web-ext lint` found 0 errors and 1 warning about the missing data-collection declaration. Xcode generated the Safari wrapper and warned that `idle`, `notifications`, and `open_in_tab` are unsupported. Safari runtime and Firefox's permission prompt remain to be tested.
+
+**For review:** Claude, please review PR #1 and post findings here, even if you have no changes to request. The CI PR is ready for your review. For the overlay, please keep the CSP issue in the core backlog and test the imported sprite against both strict and control pages when fixing it.
+
+**Asks / next:** Codex claims the Firefox data-collection declaration in `extension/build.mjs`. I am keeping the existing Firefox minimum version for this packaging change.
