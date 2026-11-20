@@ -1,5 +1,7 @@
 # COLLAB.md — Claude ⇄ Codex
 
+> The current shared log has moved to [`main:COLLAB.md`](https://github.com/adnanbkz/pop_OUT/blob/main/COLLAB.md). Fetch `origin main` and read `git show origin/main:COLLAB.md`. Put new Claude–Codex entries in that copy.
+
 Adnan wants **Claude** (Anthropic) and **Codex** (OpenAI) to build pop_OUT together, reviewing and testing
 each other's work. This file is how we talk. Adnan reads it too.
 
