@@ -48,12 +48,23 @@ function decideStatus(session: Session, settings: Settings, ctx: Context, now: n
 
 // ---------- the core: called on every event ----------
 
-let running: Promise<void> = Promise.resolve();
+let queueTail: Promise<unknown> = Promise.resolve();
 
-/** Serialize evaluations so two events can't double-count time. */
+/**
+ * Every piece of work that reads and writes the session goes through this
+ * single queue, one at a time. Without it, a nudge that is still drawing the
+ * pet could save an old copy of the session after the user pressed Stop.
+ * Work inside the queue must call evaluateNow(), never evaluate(), or it
+ * would wait for itself.
+ */
+function enqueue<T>(work: () => Promise<T>): Promise<T> {
+  const result = queueTail.then(work, work);
+  queueTail = result.catch(() => undefined);
+  return result;
+}
+
 function evaluate(): Promise<void> {
-  running = running.then(evaluateNow, evaluateNow);
-  return running;
+  return enqueue(evaluateNow);
 }
 
 async function evaluateNow(): Promise<void> {
@@ -120,8 +131,8 @@ async function evaluateNow(): Promise<void> {
   await updateBadge(session);
 }
 
-async function nudge(): Promise<void> {
-  await evaluate();
+async function nudgeNow(): Promise<void> {
+  await evaluateNow();
   const session = await getSession();
   if (!session || session.done || session.status !== 'distracted') {
     await chrome.alarms.clear(NUDGE);
@@ -193,7 +204,7 @@ async function updateBadge(session: Session | null): Promise<void> {
 
 // ---------- commands from the popup / overlay ----------
 
-async function handle(cmd: Command): Promise<void> {
+async function handleNow(cmd: Command): Promise<void> {
   const now = Date.now();
   switch (cmd.type) {
     case 'start': {
@@ -216,7 +227,7 @@ async function handle(cmd: Command): Promise<void> {
       };
       await saveSession(session);
       await chrome.alarms.create(TICK, { periodInMinutes: 1 });
-      await evaluate();
+      await evaluateNow();
       break;
     }
     case 'stop':
@@ -225,13 +236,13 @@ async function handle(cmd: Command): Promise<void> {
       await updateBadge(null);
       break;
     case 'pause': {
-      await evaluate(); // bank time first
+      await evaluateNow(); // bank time first
       const s = await getSession();
       if (!s) return;
       s.pausedUntil = cmd.minutes ? now + cmd.minutes * 60_000 : Number.MAX_SAFE_INTEGER;
       await saveSession(s);
       if (cmd.minutes) await chrome.alarms.create(BREAK_END, { delayInMinutes: cmd.minutes });
-      await evaluate();
+      await evaluateNow();
       break;
     }
     case 'resume': {
@@ -240,7 +251,7 @@ async function handle(cmd: Command): Promise<void> {
       s.pausedUntil = null;
       await saveSession(s);
       await chrome.alarms.clear(BREAK_END);
-      await evaluate();
+      await evaluateNow();
       break;
     }
     case 'test-pop': {
@@ -263,7 +274,7 @@ async function handle(cmd: Command): Promise<void> {
 // ---------- wiring: every listener is registered at top level ----------
 
 chrome.runtime.onMessage.addListener((cmd: Command, _sender, reply) => {
-  handle(cmd).then(() => reply({ ok: true }), (e) => reply({ ok: false, error: String(e) }));
+  enqueue(() => handleNow(cmd)).then(() => reply({ ok: true }), (e) => reply({ ok: false, error: String(e) }));
   return true; // async reply
 });
 
@@ -276,10 +287,12 @@ chrome.idle.onStateChanged.addListener(() => void evaluate());
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === TICK || alarm.name === BREAK_END) void evaluate();
-  if (alarm.name === NUDGE) void nudge();
+  if (alarm.name === NUDGE) void enqueue(nudgeNow);
 });
 
-chrome.runtime.onStartup.addListener(async () => {
+chrome.runtime.onStartup.addListener(() => void enqueue(startupNow));
+
+async function startupNow(): Promise<void> {
   // Browser restarted: don't count the time it was closed.
   const s = await getSession();
   if (s && !s.done) {
@@ -289,7 +302,7 @@ chrome.runtime.onStartup.addListener(async () => {
     await chrome.alarms.create(TICK, { periodInMinutes: 1 });
   }
   await updateBadge(s);
-});
+}
 
 chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') await chrome.runtime.openOptionsPage();
