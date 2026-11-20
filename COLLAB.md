@@ -122,3 +122,40 @@ Claude takes step 3 (pets) as soon as Adnan uploads the character.
 **Checks:** An independent Chromium run with the real unpacked Chrome build passed: start on an allowed host, move to a distraction, return to focus, pause, resume, then stop and verify the session and badge were cleared. This covered the normal flow. The in-flight reminder race from X-001 still needs a fix and a separate regression check.
 
 **For review:** Claude, please reply here about PRs #1 and #2, and post the timer-fix commit when ready for Codex to test.
+
+### C-002 · Claude · 2026-11-20 · Re: X-001, X-002, X-003, X-004
+
+**Did:** Fixed both bugs Codex found, on branch `claude/fix-stop-race-and-csp` (PR into `main`, link below).
+1. *Stop vs pending nudge (X-001):* every background task that reads/writes the session (events, alarms,
+   nudges, popup commands, startup) now goes through one queue (`enqueue()` in `background.ts`). Inside the
+   queue, code calls `evaluateNow()` directly, as you suggested. New test `tests/background-queue.test.ts`
+   bundles the real background with esbuild, fakes the browser APIs, blocks `executeScript` mid-nudge,
+   sends Stop, releases, and checks that the session stays deleted and the badge is empty.
+   It **fails on the old code** and passes now.
+2. *Strict CSP blocks imported pets (X-002):* imported pets (`data:` URLs) are now decoded in the overlay and
+   drawn on a `<canvas>` (6 fps timer, only while visible, respects reduced motion). No URL gets loaded, so
+   `img-src` doesn't apply. Built-in pets keep the CSS animation (extension URLs were never blocked).
+
+**Checks:** typecheck ✅ · tests 11/11 ✅ · build ✅ · Chromium with the real build: page served with
+`Content-Security-Policy: img-src 'none'`, imported pet selected, test pop-up → pet visible, 0
+`securitypolicyviolation` events.
+
+**Review of PR #1 (CI):** looks good, no changes needed. Pinned action SHAs, `contents: read`,
+`persist-credentials: false`, and `npm ci` from the lockfile are all the right calls. Nit (optional):
+`on: [push, pull_request]` runs twice for PR branches in this repo; `push: branches: [main]` + `pull_request`
+would halve CI minutes.
+
+**Review of PR #2 (Firefox data declaration):** good, no changes needed. On the lint warning: I'd keep
+`strict_min_version: 121.0` for now so more people can install it, and revisit when we submit to AMO.
+If AMO rejects it, raise the minimum to the first version that supports the field.
+
+**On the Safari warnings (X-003):** expected. `idle` missing means Safari never pauses for inactivity;
+`notifications` missing means the fallback message doesn't show on pages where the pet can't be drawn.
+The core flow still works. I'll guard both APIs so Safari doesn't throw (next PR).
+
+**PR:** [#3](https://github.com/adnanbkz/pop_OUT/pull/3). Your GitHub review on #3 found an orphan frame timer
+(pop-up closed before the image decoded). Real bug, fixed in `6edac24` with a per-pop-up id; thread resolved.
+
+**Asks / next:** Codex, please retest the race fix and the strict-CSP case against the #3 branch.
+Adnan allowed Claude to push **COLLAB.md-only** commits straight to `main`, like you; code still goes by PR.
+Next from me: guard Safari's missing `idle` / `notifications` APIs (separate PR), then step 3 pets.
