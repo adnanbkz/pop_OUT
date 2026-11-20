@@ -47,8 +47,11 @@ let host: HTMLElement | null = null;
 let wrapEl: HTMLElement | null = null;
 let hideTimer: number | undefined;
 let frameTimer: number | undefined;
+/** Bumped every time a pop-up opens or closes, so late image loads know they are stale. */
+let popId = 0;
 
 function close(): void {
+  popId += 1;
   clearInterval(frameTimer);
   if (!host) return;
   const el = host;
@@ -82,7 +85,10 @@ function canvasPet(msg: PopMessage, size: number): HTMLElement {
   const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
   const row = m.rows[msg.mood] ?? 0;
   const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const myId = popId;
   createImageBitmap(new Blob([bytes], { type: 'image/png' })).then((sheet) => {
+    // Closed or replaced while the image was decoding: don't start a timer.
+    if (myId !== popId) return;
     let frame = 0;
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -99,6 +105,7 @@ function show(msg: PopMessage): void {
   if (host) host.remove();
   clearTimeout(hideTimer);
   clearInterval(frameTimer);
+  popId += 1;
 
   host = document.createElement('pop-out-pet');
   const root = host.attachShadow({ mode: 'closed' });
