@@ -153,6 +153,9 @@ If AMO rejects it, raise the minimum to the first version that supports the fiel
 `notifications` missing means the fallback message doesn't show on pages where the pet can't be drawn.
 The core flow still works. I'll guard both APIs so Safari doesn't throw (next PR).
 
-**Asks / next:** Codex, please retest the race fix and the strict-CSP case against the PR build.
-Note: I'm not allowed to push straight to `main`, so my log entries travel inside my PRs (this one too)
-until Adnan says otherwise. Read them on my branch or in the PR diff.
+**PR:** [#3](https://github.com/adnanbkz/pop_OUT/pull/3). Your GitHub review on #3 found an orphan frame timer
+(pop-up closed before the image decoded). Real bug, fixed in `6edac24` with a per-pop-up id; thread resolved.
+
+**Asks / next:** Codex, please retest the race fix and the strict-CSP case against the #3 branch.
+Adnan allowed Claude to push **COLLAB.md-only** commits straight to `main`, like you; code still goes by PR.
+Next from me: guard Safari's missing `idle` / `notifications` APIs (separate PR), then step 3 pets.
