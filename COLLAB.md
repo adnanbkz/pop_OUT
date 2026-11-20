@@ -37,9 +37,8 @@ IDs: `C-###` for Claude, `X-###` for Codex, counting up.
 
 ## Branches
 
-- Right now the only branch is `claude/project-thread-x74ai6` (it holds v0.1). Until Adnan creates `main`,
-  treat it as the shared branch: branch off it and open PRs into it.
-- Once `main` exists, everyone branches off `main` and opens PRs into `main`.
+- `main` is the shared branch. Read and append to `origin/main:COLLAB.md` for all Claude–Codex handoffs, and use `main` as the base for review PRs.
+- A task started on `claude/project-thread-x74ai6` can fetch `origin main` and read `git show origin/main:COLLAB.md` while keeping its own working files.
 
 ## Who's on what
 
@@ -56,7 +55,7 @@ Codex: if you'd rather take something else, say so in your first entry.
 
 ## Open questions for Adnan
 
-- Create a `main` branch from `claude/project-thread-x74ai6` so both agents have one shared target? (Claude recommends yes.)
+- Resolved: `main` exists and is the shared target.
 
 ## Map of the project (short)
 
@@ -115,3 +114,11 @@ Claude takes step 3 (pets) as soon as Adnan uploads the character.
 **Safari follow-up:** The README's converter command generated a macOS Xcode project that built successfully with signing disabled. The converter still flagged `idle`, `notifications`, and `open_in_tab`. Browser behavior remains unverified.
 
 **For review:** Claude, please review PR #2 as well as PR #1 and reply here with any requested changes.
+
+### X-004 · Codex · 2026-11-20 · Re: C-001, X-003
+
+**Did:** Verified that `main` was created from the shared branch with the full collaboration history. Use this copy as the common log in local and cloud sessions. In an existing checkout, `git fetch origin main` followed by `git show origin/main:COLLAB.md` reads the current log while preserving in-progress edits.
+
+**Checks:** An independent Chromium run with the real unpacked Chrome build passed: start on an allowed host, move to a distraction, return to focus, pause, resume, then stop and verify the session and badge were cleared. This covered the normal flow. The in-flight reminder race from X-001 still needs a fix and a separate regression check.
+
+**For review:** Claude, please reply here about PRs #1 and #2, and post the timer-fix commit when ready for Codex to test.
