@@ -46,8 +46,13 @@ ${spriteKeyframes}
 let host: HTMLElement | null = null;
 let wrapEl: HTMLElement | null = null;
 let hideTimer: number | undefined;
+let frameTimer: number | undefined;
+/** Bumped every time a pop-up opens or closes, so late image loads know they are stale. */
+let popId = 0;
 
 function close(): void {
+  popId += 1;
+  clearInterval(frameTimer);
   if (!host) return;
   const el = host;
   host = null;
@@ -55,9 +60,52 @@ function close(): void {
   setTimeout(() => el.remove(), 260);
 }
 
+/** Built-in pets: extension URLs are allowed on every page, so plain CSS animation works. */
+function cssPet(msg: PopMessage, size: number): HTMLElement {
+  const el = document.createElement('div');
+  el.setAttribute('style', spriteStyle(msg.pet.manifest, msg.pet.sheetUrl, msg.mood, size));
+  return el;
+}
+
+/**
+ * Imported pets are stored as data: URLs, and some pages forbid loading those
+ * images (a strict "img-src" Content Security Policy). So we turn the data into
+ * bytes ourselves and draw the frames on a <canvas>: no URL is ever loaded, so
+ * the page's rules don't apply. The 6 fps timer only runs while the pet is visible.
+ */
+function canvasPet(msg: PopMessage, size: number): HTMLElement {
+  const m = msg.pet.manifest;
+  const ratio = window.devicePixelRatio || 1;
+  const canvas = document.createElement('canvas');
+  canvas.width = size * ratio;
+  canvas.height = size * ratio;
+  canvas.style.width = canvas.style.height = `${size}px`;
+  const ctx = canvas.getContext('2d')!;
+  const [, b64] = msg.pet.sheetUrl.split(',', 2);
+  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  const row = m.rows[msg.mood] ?? 0;
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const myId = popId;
+  createImageBitmap(new Blob([bytes], { type: 'image/png' })).then((sheet) => {
+    // Closed or replaced while the image was decoding: don't start a timer.
+    if (myId !== popId) return;
+    let frame = 0;
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(sheet, frame * m.frameWidth, row * m.frameHeight, m.frameWidth, m.frameHeight, 0, 0, canvas.width, canvas.height);
+      frame = (frame + 1) % m.frames;
+    };
+    draw();
+    if (!still) frameTimer = window.setInterval(draw, 1000 / m.fps);
+  });
+  return canvas;
+}
+
 function show(msg: PopMessage): void {
   if (host) host.remove();
   clearTimeout(hideTimer);
+  clearInterval(frameTimer);
+  popId += 1;
 
   host = document.createElement('pop-out-pet');
   const root = host.attachShadow({ mode: 'closed' });
@@ -93,9 +141,8 @@ function show(msg: PopMessage): void {
   }
   bubble.append(p, row);
 
-  const pet = document.createElement('div');
+  const pet = msg.pet.sheetUrl.startsWith('data:') ? canvasPet(msg, 96) : cssPet(msg, 96);
   pet.className = 'pet';
-  pet.setAttribute('style', spriteStyle(msg.pet.manifest, msg.pet.sheetUrl, msg.mood, 96));
   pet.title = 'pop_OUT';
   pet.onclick = close;
 
